@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototipo Interactivo: Sistema Eléctrico Automotriz | Mecánica Básica</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            950: '#090d16',
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155'
+                        },
+                        cyan: {
+                            400: '#22d3ee',
+                            500: '#06b6d4',
+                            600: '#0891b2'
+                        },
+                        emerald: {
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(6, 182, 212, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+        }
+    </style>
+</head>
+<body class="bg-dark-950 text-slate-100 min-h-screen flex flex-col selection:bg-cyan-500 selection:text-white">
+
+    <!-- Top Navigation / Gamification Bar -->
+    <header class="bg-dark-900 border-b border-dark-700 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-cyan-500/10 p-2.5 rounded-xl border border-cyan-500/30 text-cyan-400 text-xl">
+                    <i class="fa-solid fa-car-burst"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white tracking-wide">Prototipo: Sistema Eléctrico <span class="text-xs px-2 py-0.5 bg-cyan-950 border border-cyan-600 text-cyan-300 rounded-full ml-2">Módulo 3</span></h1>
+                    <p class="text-xs text-slate-400">Docente: Ldo. Pablo Ramos | Inspección bajo Capó</p>
+                </div>
+            </div>
+
+            <!-- Gamification Stats -->
+            <div class="flex items-center space-x-4 bg-dark-800/80 px-4 py-2 rounded-xl border border-dark-700 shadow-inner">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-bolt text-cyan-400"></i>
+                    <span class="text-xs text-slate-300">Puntaje Eléctrico: <strong id="scoreDisplay" class="text-cyan-400">0</strong> pts</span>
+                </div>
+                <div class="h-4 w-px bg-dark-700"></div>
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                    <span class="text-xs text-slate-300">Encontrados: <strong id="foundDisplay" class="text-emerald-400">0/4</strong></span>
+                </div>
+                <button onclick="reiniciarPrototipo()" title="Reiniciar Prototipo" class="text-slate-400 hover:text-red-400 transition text-xs ml-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- Notification Banner -->
+        <div id="notificationBanner" class="hidden bg-emerald-950/80 border border-emerald-500 text-emerald-200 px-4 py-3 rounded-xl text-sm flex items-center justify-between shadow-lg transition-all animate-pulse">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+                <span id="notificationText">¡Correcto! Componente eléctrico identificado.</span>
+            </div>
+            <button onclick="ocultarNotificacion()" class="text-emerald-400 hover:text-white">&times;</button>
+        </div>
+
+        <!-- Instructions Panel -->
+        <div class="bg-dark-900 border border-dark-700 p-5 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <span class="text-xs font-semibold text-cyan-400 uppercase tracking-widest">Simulador Interactivo de Diagnóstico</span>
+                <h2 class="text-xl font-bold text-white mt-1">Inspección del Sistema Eléctrico bajo el Capó Abierto</h2>
+                <p class="text-slate-300 text-sm mt-1">
+                    Lee atentamente el caso de diagnóstico y haz clic sobre el componente eléctrico correcto dentro del compartimiento del motor.
+                </p>
+            </div>
+            <div class="bg-cyan-950/60 border border-cyan-500/40 p-4 rounded-xl text-xs text-cyan-200 max-w-sm">
+                <strong class="block mb-1 text-cyan-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Reto Actual:</strong>
+                <span id="retoInstruccion">Selecciona el acumulador que suministra corriente inicial y almacena energía química.</span>
+            </div>
+        </div>
+
+        <!-- Interactive Hood Compartment Simulator Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Car Diagram with Open Hood (Interactive Canvas Simulation) -->
+            <div class="lg:col-span-2 bg-dark-900 border border-dark-700 p-6 rounded-2xl shadow-xl relative min-h-[420px] flex flex-col justify-between overflow-hidden">
+                
+                <!-- Background Header of Open Hood -->
+                <div class="absolute top-3 left-4 right-4 flex justify-between items-center text-xs text-slate-400 border-b border-dark-800 pb-2">
+                    <span><i class="fa-solid fa-car text-cyan-400 mr-1"></i> Vista Superior: Compartimiento del Motor (Capó Abierto)</span>
+                    <span class="text-amber-400 font-semibold"><i class="fa-solid fa-bolt mr-1"></i> Sistema de Ignición y Carga</span>
+                </div>
+
+                <!-- Engine Bay Schematic Layout -->
+                <div class="relative w-full h-80 bg-dark-950 rounded-xl border border-dark-800 mt-8 flex items-center justify-center p-4">
+                    
+                    <!-- Motor Block Center -->
+                    <div class="absolute w-44 h-36 bg-slate-800 border-2 border-slate-700 rounded-2xl flex flex-col items-center justify-center shadow-inner">
+                        <i class="fa-solid fa-gears text-3xl text-slate-500 mb-1"></i>
+                        <span class="text-xs font-bold text-slate-400">BLOQUE MOTOR</span>
+                    </div>
+
+                    <!-- Hotspot 1: Batería -->
+                    <button onclick="verificarComponente('bateria')" id="hotspot-bateria" class="absolute top-8 left-10 p-3 bg-dark-800/90 hover:bg-cyan-950 border-2 border-dashed border-cyan-500/60 hover:border-cyan-400 rounded-xl transition flex flex-col items-center group cursor-pointer pulse-glow">
+                        <span class="text-2xl mb-0.5">🔋</span>
+                        <span class="text-[11px] font-semibold text-cyan-300">Batería</span>
+                    </button>
+
+                    <!-- Hotspot 2: Alternador -->
+                    <button onclick="verificarComponente('alternador')" id="hotspot-alternador" class="absolute top-8 right-12 p-3 bg-dark-800/90 hover:bg-cyan-950 border-2 border-dashed border-cyan-500/60 hover:border-cyan-400 rounded-xl transition flex flex-col items-center group cursor-pointer">
+                        <span class="text-2xl mb-0.5">⚡</span>
+                        <span class="text-[11px] font-semibold text-cyan-300">Alternador</span>
+                    </button>
+
+                    <!-- Hotspot 3: Motor de Arranque -->
+                    <button onclick="verificarComponente('arranque')" id="hotspot-arranque" class="absolute bottom-8 left-14 p-3 bg-dark-800/90 hover:bg-cyan-950 border-2 border-dashed border-cyan-500/60 hover:border-cyan-400 rounded-xl transition flex flex-col items-center group cursor-pointer">
+                        <span class="text-2xl mb-0.5">🔄</span>
+                        <span class="text-[11px] font-semibold text-cyan-300">Motor Arranque</span>
+                    </button>
+
+                    <!-- Hotspot 4: Caja de Fusibles -->
+                    <button onclick="verificarComponente('fusibles')" id="hotspot-fusibles" class="absolute bottom-8 right-14 p-3 bg-dark-800/90 hover:bg-cyan-950 border-2 border-dashed border-cyan-500/60 hover:border-cyan-400 rounded-xl transition flex flex-col items-center group cursor-pointer">
+                        <span class="text-2xl mb-0.5">🛡️</span>
+                        <span class="text-[11px] font-semibold text-cyan-300">Caja Fusibles</span>
+                    </button>
+
+                </div>
+
+                <div class="mt-4 text-xs text-slate-400 text-center">
+                    💡 Haga clic sobre los componentes intermitentes o destacados en el compartimiento del motor según el caso clínico.
+                </div>
+            </div>
+
+            <!-- Diagnostic Feedback & Theory Card -->
+            <div class="lg:col-span-1 bg-dark-900 border border-dark-700 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
+                <div>
+                    <h3 class="text-base font-semibold text-white mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-book-medical text-cyan-400"></i> Ficha de Diagnóstico
+                    </h3>
+                    
+                    <div id="feedbackContainer" class="space-y-3 text-sm text-slate-300">
+                        <div class="bg-dark-950 p-4 rounded-xl border border-dark-800">
+                            <strong class="text-cyan-400 block mb-1">Estado del Sistema:</strong>
+                            <p id="feedbackTexto">Esperando selección del estudiante. Analice el caso clínico y ubique el elemento correcto bajo el capó.</p>
+                        </div>
+                        <div class="bg-dark-950 p-4 rounded-xl border border-dark-800">
+                            <strong class="text-amber-400 block mb-1">Fundamento Teórico:</strong>
+                            <p id="teoriaTexto">El sistema eléctrico del vehículo abarca la generación de energía, almacenamiento, arranque y protección de circuitos.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-dark-700">
+                    <div id="proximoRetoBtn" class="hidden">
+                        <button onclick="siguienteReto()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2.5 rounded-xl font-medium text-sm transition shadow-lg shadow-cyan-900/40">
+                            Siguiente Caso Eléctrico <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                    <div id="finPrototipoMensaje" class="hidden text-center text-emerald-400 font-bold text-sm">
+                        🎉 ¡Prototipo completado con éxito! Todos los componentes eléctricos diagnosticados.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-900 border-t border-dark-700 py-6 mt-12 text-center text-xs text-slate-400">
+        <p>Prototipo Interactivo de Mecánica Básica &copy; 2024-2025 | Docente: Ldo. Pablo Ramos</p>
+    </footer>
+
+    <!-- JavaScript Prototype Logic -->
+    <script>
+        // Definición de retos de diagnóstico eléctrico
+        const retosElectricos = [
+            {
+                id: 'bateria',
+                nombre: 'Batería',
+                pregunta: 'Selecciona el acumulador que suministra corriente inicial al motor de arranque y almacena energía química.',
+                teoria: 'La batería acumula energía eléctrica en forma química. Si sus bornes se sulfatan, el auto no dará arranque.'
+            },
+            {
+                id: 'alternador',
+                nombre: 'Alternador',
+                pregunta: 'Selecciona el componente encargado de transformar energía mecánica en eléctrica para recargar la batería mientras el motor marcha.',
+                teoria: 'El alternador mantiene el voltaje del sistema y alimenta accesorios. Una falla en este enciende la luz testigo de batería.'
+            },
+            {
+                id: 'arranque',
+                nombre: 'Motor de Arranque',
+                pregunta: 'Selecciona el motor eléctrico auxiliar de alta potencia que gira el volante motor para iniciar la combustión.',
+                teoria: 'Consume grandes cantidades de corriente directamente de la batería solo durante los primeros segundos de encendido.'
+            },
+            {
+                id: 'fusibles',
+                nombre: 'Caja de Fusibles',
+                pregunta: 'Selecciona el panel de protección que interrumpe la corriente mediante un filamento calibrado ante cortocircuitos.',
+                teoria: 'Protegen el cableado y los dispositivos eléctricos (luces, bocina, radio) de sobrecargas de corriente.'
+            }
+        ];
+
+        let indiceRetoActual = 0;
+        let puntaje = 0;
+        let encontrados = 0;
+        let componentesCompletados = [];
+
+        function actualizarRetoUI() {
+            if (indiceRetoActual < retosElectricos.length) {
+                document.getElementById('retoInstruccion').textContent = retosElectricos[indiceRetoActual].pregunta;
+            }
+        }
+
+        function mostrarNotificacion(texto) {
+            const banner = document.getElementById('notificationBanner');
+            document.getElementById('notificationText').textContent = texto;
+            banner.classList.remove('hidden');
+            setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 4000);
+        }
+
+        function ocultarNotificacion() {
+            document.getElementById('notificationBanner').classList.add('hidden');
+        }
+
+        function verificarComponente(idSeleccionado) {
+            const retoActual = retosElectricos[indiceRetoActual];
+
+            if (componentesCompletados.includes(idSeleccionado)) {
+                mostrarNotificacion("Este componente ya fue identificado anteriormente.");
+                return;
+            }
+
+            const btnHotspot = document.getElementById(`hotspot-${idSeleccionado}`);
+
+            if (idSeleccionado === retoActual.id) {
+                // Correcto
+                componentesCompletados.push(idSeleccionado);
+                puntaje += 25;
+                encontrados++;
+                
+                document.getElementById('scoreDisplay').textContent = puntaje;
+                document.getElementById('foundDisplay').textContent = `${encontrados}/4`;
+
+                btnHotspot.classList.remove('border-cyan-500/60', 'bg-dark-800');
+                btnHotspot.classList.add('border-emerald-500', 'bg-emerald-950/60');
+                btnHotspot.innerHTML += `<span class="absolute -top-2 -right-2 bg-emerald-500 text-dark-950 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold"><i class="fa-solid fa-check"></i></span>`;
+
+                document.getElementById('feedbackTexto').innerHTML = `<span class="text-emerald-400 font-bold">¡Excelente diagnóstico!</span> Has seleccionado correctamente el componente: <strong>${retoActual.nombre}</strong>. (+25 pts)`;
+                document.getElementById('teoriaTexto').textContent = retoActual.teoria;
+                
+                mostrarNotificacion(`¡Correcto! Has identificado el componente ${retoActual.nombre}.`);
+
+                if (encontrados < retosElectricos.length) {
+                    document.getElementById('proximoRetoBtn').classList.remove('hidden');
+                } else {
+                    document.getElementById('finPrototipoMensaje').classList.remove('hidden');
+                }
+
+            } else {
+                // Incorrecto
+                puntaje = Math.max(0, puntaje - 5);
+                document.getElementById('scoreDisplay').textContent = puntaje;
+                document.getElementById('feedbackTexto').innerHTML = `<span class="text-red-400 font-bold">Diagnóstico erróneo.</span> Ese componente no corresponde al caso clínico actual (-5 pts). Vuelva a intentarlo.`;
+                mostrarNotificacion("Componente incorrecto. Revise la función teórica.");
+            }
+        }
+
+        function siguienteReto() {
+            indiceRetoActual++;
+            document.getElementById('proximoRetoBtn').classList.add('hidden');
+            if (indiceRetoActual < retosElectricos.length) {
+                actualizarRetoUI();
+                document.getElementById('feedbackTexto').textContent = "Esperando selección para el nuevo caso de diagnóstico eléctrico...";
+                document.getElementById('teoriaTexto').textContent = "Analice las pistas y seleccione el componente adecuado bajo el capó.";
+            }
+        }
+
+        // Inicializar interfaz al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            actualizarRetoUI();
+        });
+
+        function reiniciarPrototipo() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
